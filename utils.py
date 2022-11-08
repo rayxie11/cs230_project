@@ -9,9 +9,10 @@ from PIL import Image, ImageOps
 from tqdm.auto import tqdm
 import tensorflow as tf
 from numba import jit
+from skimage.io import imread_collection
 
 
-# Choreography genre names
+# Choreography genre name paths
 path = "C:/Users/ray_s/Desktop/cs230_project/dataset"
 genres = os.listdir(path+"/video")
 
@@ -62,11 +63,12 @@ def get_min_segment_val():
     return vid_min_size, idx_dict
 
 
-def video_data_gen():
+def video_data_gen(img_height = 720, img_width = 1080):
     '''
     This function generates the full dataset for videos
     Args:
-        None
+        img_height: Dataset image height
+        img_width: Dataset image width
     Returns:
         X: Video data (num_samples,img_dim_x,img_dim_y,3)
         Y: One-hot label (num_samples,label_dim)
@@ -82,45 +84,39 @@ def video_data_gen():
     X = []
     Y = []
 
+    
     vid_min_size, idx_dict = get_min_segment_val()
 
-    # Loop through all videos
-    for i in range(len(genres)):
-        cur_path = path + "/video/" + genres[i]
-        dir_names = os.listdir(cur_path)
+    cur_path = path + "/video/" + genres[0]
+    dataset_full = tf.keras.utils.image_dataset_from_directory(
+        cur_path,
+        labels = None,
+        image_size = (img_height, img_width),
+        color_mode = "rgb",
+        crop_to_aspect_ratio = True
+    )
+    
 
-        # Set label
-        label = np.zeros(len(genres))
-        label[i] = 1
 
-        # Loop through each sample segment
-        for j in tqdm(range(len(idx_dict[genres[i]])-2),position=0,leave=True):
-            # Get the beginning and ending indices
-            front_idx = idx_dict[genres[i]][j]
-            end_idx = idx_dict[genres[i]][j+1]
+    for images in dataset_full.take(-1):
+        x = images.numpy()
+        for img in x:
+            print(img)
+            disp = Image.fromarray(img,'RGB')
+            disp.show()
+            break
+    #print(x[0])
+    
+    
 
-            # See how many samples can be extracted w.r.t the min video length
-            reps = (end_idx - front_idx) // vid_min_size
-
-            X_single = []
-
-            m = 0
-            
-            for k in range(front_idx, end_idx+1):
-                if m == vid_min_size:
-                    image = tf.keras.preprocessing.image.load_img(path + "/video/" + genres[i] + "/" + dir_names[k], target_size=(256,256,3))
-                    img_arr = tf.keras.preprocessing.image.img_to_array(image)
-                    X_single = [img_arr]
-                image = tf.keras.preprocessing.image.load_img(path + "/video/" + genres[i] + "/" + dir_names[k], target_size=(256,256,3))
-                img_arr = tf.keras.preprocessing.image.img_to_array(image)
-                X_single.append(img_arr)
-                m += 1
-            
-            X_single = np.array(X_single)
-
-            X.append(X_single)
-            Y.append(label)
-
+    print(dataset_full)
+    '''
+    cur_path = path + "/video/" + genres[0]
+    c = imread_collection(cur_path+"/*.jpg")
+    c = c.concatenate()
+    disp = Image.fromarray(c[0])
+    disp.show()
+    '''
 
 
 
