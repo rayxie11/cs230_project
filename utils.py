@@ -10,7 +10,9 @@ from tqdm.auto import tqdm
 import tensorflow as tf
 from numba import jit
 from skimage.io import imread_collection
-
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import tensorflow_datasets as tfds
 
 # Choreography genre name paths
 path = "C:/Users/ray_s/Desktop/cs230_project/dataset"
@@ -28,10 +30,10 @@ def get_min_segment_val():
     '''
     # Set initial parameters
     vid_min_size = 10000
-    idx_dict = {}
+    genre_idx_dict = {}
 
     for genre in genres:
-        idx_dict[genre] = [0]
+        genre_idx_dict[genre] = [0]
         cur_path = path + "/video/" + genre
         dir_names = os.listdir(cur_path)
 
@@ -51,16 +53,43 @@ def get_min_segment_val():
                 vid_min_size = min(vid_min_size, cur_vid_len)
 
                 # Add index to idx_dict
-                idx_dict[genre].append(i)
+                genre_idx_dict[genre].append(i)
 
                 # Reset count and prev_header
                 cur_vid_len = 1
                 prev_header = dir_names[i].split('_')[0]
         
         # Add the last index to idx_dict
-        idx_dict[genre].append(len(dir_names)-1)
+        genre_idx_dict[genre].append(len(dir_names)-1)
     
-    return vid_min_size, idx_dict
+    return vid_min_size, genre_idx_dict
+
+
+def remap_dir():
+    '''
+    This function remaps the directories and files for the video dataset
+    Details:
+        Genre -> One video -> Video segments
+    Args:
+        None
+    Returns:
+        None
+    '''
+    vid_min_size, genre_idx_dict = get_min_segment_val()
+
+    for genre in genres:
+        cur_path = path + "/video/" + genre
+        dir_names = os.listdir(cur_path)
+        genre_idx = genre_idx_dict[genre]
+
+        parent_folder_idx = 0
+
+        for i in range(len(genre_idx)-1):
+            idx1 = genre_idx[i]
+            idx2 = genre_idx[i+1]
+            dir_slice = dir_names[idx1:idx2+1]
+
+
 
 
 def video_data_gen(img_height = 720, img_width = 1080):
@@ -73,49 +102,128 @@ def video_data_gen(img_height = 720, img_width = 1080):
         X: Video data (num_samples,img_dim_x,img_dim_y,3)
         Y: One-hot label (num_samples,label_dim)
     '''
-    '''
-    dataset_full = tf.keras.preprocessing.image_dataset_from_directory(
-        path + "/video",
-        labels = 'inferred',
-        label_mode = 'int'
-    )
-    '''
     # Return variables
-    X = []
-    Y = []
+    dataset = None
 
-    
-    vid_min_size, idx_dict = get_min_segment_val()
+    # Get minimum video size and video slice indices
+    vid_min_size, genre_idx_dict = get_min_segment_val()
 
+    # Construct dataset
+    for i in range(len(genres)):
+        # Set current path, video splits and label
+        cur_path = path + "/video/" + genres[i]
+        genre_idx = genre_idx_dict[genres[i]]
+        label = np.zeros(len(genres))
+        #label[i] = 1
+        #label = np.expand_dims(label, axis=0)
+
+        # Extract all images in current genre
+        dataset_cur_genre = tf.keras.utils.image_dataset_from_directory(
+            cur_path,
+            labels = None,
+            image_size = (img_height, img_width),
+            color_mode = "rgb",
+            crop_to_aspect_ratio = True,
+            shuffle = False,
+            batch_size = 1
+        )
+        dataset_cur_genre = dataset_cur_genre.unbatch()
+
+        # Set tf.data.Dataset manip constants
+        skip_count = 0
+
+        
+
+        # Get video slices w.r.t to genre_idx and vid_min_size
+        for j in tqdm(range(len(genre_idx)-1),position=0,leave=True):
+        #for j in range(len(genre_idx)-1):
+            idx_1 = genre_idx[j]
+            idx_2 = genre_idx[j+1]
+
+            # See how many samples can a single video generate
+            n_samples = (idx_2 - idx_1) // vid_min_size
+            remainder = (idx_2 - idx_1) % vid_min_size
+
+            # Collect data from a single video segment
+            X_sub = []
+            Y_sub = np.tile(label, (n_samples,1))
+
+            # Generate sub dataset
+            for _ in range(n_samples):
+                sub_x = dataset_cur_genre.skip(skip_count).take(vid_min_size)
+                sub_x = np.array(list(tfds.as_numpy(sub_x)))
+                #print(sub_x.shape)
+                X_sub.append(sub_x)
+                '''
+                if dataset == None:
+                    dataset = tf.data.Dataset.from_tensor_slices((sub_x,label))
+                else:
+                    sub_dataset = tf.data.Dataset.from_tensor_slices((sub_x,label))
+                    dataset = dataset.concatenate(sub_dataset)
+                '''
+
+                # Update skip_count
+                skip_count += vid_min_size
+            
+            X_sub = np.array(X_sub)
+            assert X_sub.shape[0] == Y_sub.shape[0], "Data and label have wrong shapes"
+
+            # Add generated data into dataset
+            if dataset == None:
+                dataset = tf.data.Dataset.from_tensor_slices((X_sub,Y_sub))
+            else:
+                sub_dataset = tf.data.Dataset.from_tensor_slices((X_sub,Y_sub))
+                dataset = dataset.concatenate(sub_dataset)
+
+            # Update skip_count
+            skip_count += remainder
+        break
+
+
+
+
+
+    '''
     cur_path = path + "/video/" + genres[0]
     dataset_full = tf.keras.utils.image_dataset_from_directory(
         cur_path,
         labels = None,
         image_size = (img_height, img_width),
         color_mode = "rgb",
-        crop_to_aspect_ratio = True
+        crop_to_aspect_ratio = True,
+        shuffle = False,
+        batch_size = 1
     )
     
 
+    #idx_0 = idx_dict[genres[0]]
+    #for i in range(len(idx_0)-1):
+        #new = dataset_full[idx_0[i]:idx_0[i+1]]
+    #print(len(dataset_full[:100]))
+    #ls = np.array(list(dataset_full.as_numpy_iterator()))
+    #print(ls.shape)
 
-    for images in dataset_full.take(-1):
-        x = images.numpy()
-        for img in x:
-            print(img)
-            disp = Image.fromarray(img,'RGB')
-            disp.show()
-            break
-    #print(x[0])
-    
-    
-
-    print(dataset_full)
+    sub = dataset_full.unbatch().skip(500).take(101)
+    sub = np.array(list(tfds.as_numpy(sub)))
+    print(sub.shape)
     '''
+    '''
+    for i in sub:
+        x = i.numpy().astype('uint8')
+        disp = Image.fromarray(x[0],'RGB')
+        disp.show()
+    '''
+    '''
+    X_0 = []
     cur_path = path + "/video/" + genres[0]
     c = imread_collection(cur_path+"/*.jpg")
-    c = c.concatenate()
-    disp = Image.fromarray(c[0])
-    disp.show()
+    for img in tqdm(c,position=0,leave=True):
+        height, width, _ = img.shape
+        if height == img_height and width == img_width:
+            X_0.append(img)
+        else:
+            res = cv2.resize(img, dsize=(img_height,img_width))
+            X_0.append(res)
     '''
 
 
