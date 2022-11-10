@@ -9,8 +9,8 @@ from collections import deque
 MAX_FRAME = 20
 #deprecate
 MAX_VIDEO_COUNT = 2
-filePath = '/Users/xfeng/cs230/rgb.tar.gz'
-dirPath = '/Users/xfeng/cs230/rgb'
+filePath = 'C:/Users/ray_s/Desktop/cs230_project/dataset/images'
+dirPath = 'C:/Users/ray_s/Desktop/cs230_project/dataset/images_subset'
 
 def files_from_tar_url(tar_path):
     labelMap = {}

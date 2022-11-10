@@ -2,21 +2,18 @@
 This file contains all the util functions that are needed to extract information from the given dataset
 '''
 import os
-import json
 import numpy as np
 import cv2
-from PIL import Image, ImageOps
 from tqdm.auto import tqdm
 import tensorflow as tf
-from numba import jit
-from skimage.io import imread_collection
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import tensorflow_datasets as tfds
+from tensorflow import keras
 
-# Choreography genre name paths
+# Dataset path
 path = "C:/Users/ray_s/Desktop/cs230_project/dataset"
-genres = os.listdir(path+"/video")
+genres = os.listdir(path + "/images")
 
 
 def get_min_segment_val():
@@ -90,9 +87,7 @@ def remap_dir():
             dir_slice = dir_names[idx1:idx2+1]
 
 
-
-
-def video_data_gen(img_height = 720, img_width = 1080):
+def video_data_gen_full(img_height = 720, img_width = 1080):
     '''
     This function generates the full dataset for videos
     Args:
@@ -382,6 +377,89 @@ def video_data_gen(img_height = 720, img_width = 1080):
     print(len(Y))
     '''
 
+def build_feature_extractor(img_height = 256, img_width = 256):
+    feature_extractor = keras.applications.InceptionV3(
+        weights="imagenet",
+        include_top=False,
+        pooling="avg",
+        input_shape=(img_height, img_width, 3),
+    )
+    preprocess_input = keras.applications.inception_v3.preprocess_input
+
+    inputs = keras.Input((img_height, img_width, 3))
+    preprocessed = preprocess_input(inputs)
+
+    outputs = feature_extractor(preprocessed)
+    return keras.Model(inputs, outputs, name="feature_extractor")
+
+
+def video_data_gen_sub(feature_extractor, img_height = 256, img_width = 256, frames = 20):
+    '''
+    This function generates a subsection of dataset for videos
+    Args:
+        img_height: Dataset image height
+        img_width: Dataset image width
+        frames: number of frames per video
+    Returns:
+        X: Video data (num_samples,img_dim_x,img_dim_y,3)
+        Y: One-hot label (num_samples,label_dim)
+    '''
+    # Genres
+    genres = os.listdir(path + "/images_sub")
+
+    # Return variables
+    X = []
+    Y = []
+
+    # Retrieve data from dataset
+    for i in tqdm(range(len(genres)), position=0):
+        # Set one-hot label
+        label = np.zeros(len(genres))
+        label[i] = 1
+
+        # Keep count of images and single datapoint
+        j = 0
+        X_single = []
+
+        # Loop through all images within one genre
+        cur_path = path + "/images_sub/" + genres[i]
+        dir_names = os.listdir(cur_path)
+        #while j < len(dir_names):
+        for j in tqdm(range(len(dir_names)),position=0):
+            img = cv2.imread(cur_path + "/" + dir_names[j])
+            img = cv2.resize(img, (img_width,img_height))
+            #print(j)
+            extraction = feature_extractor.predict(np.expand_dims(img,axis=0))
+            X_single.append(extraction)
+            if j != 0 and (j+1)%frames == 0:
+                X_single = np.array(X_single)
+                X.append(X_single)
+                X_single = []
+                Y.append(label)
+            #j += 1
+
+    # Set dataset and label to np.arrays
+    X = np.array(X)
+    Y = np.array(Y)
+
+    # Shuffle them for training and validation purposes
+    randomize = np.arange(len(X))
+    np.random.shuffle(randomize)
+    X = X[randomize]
+    Y = Y[randomize]
+
+    # Store them into .npy files for extraction later
+    save_path = path + "/generated_dataset/image_sub"
+    np.save(save_path + '/data', X)
+    np.save(save_path + '/label', Y)
+
+    return X, Y    
+        
+
+
+
+
 
 if __name__ == '__main__':
-    video_data_gen()
+    feature_extractor = build_feature_extractor()
+    video_data_gen_sub(feature_extractor)
