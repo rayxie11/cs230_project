@@ -114,8 +114,8 @@ def video_data_gen(img_height = 720, img_width = 1080):
         cur_path = path + "/video/" + genres[i]
         genre_idx = genre_idx_dict[genres[i]]
         label = np.zeros(len(genres))
-        #label[i] = 1
-        #label = np.expand_dims(label, axis=0)
+        label[i] = 1
+        label = np.expand_dims(label, axis=0)
 
         # Extract all images in current genre
         dataset_cur_genre = tf.keras.utils.image_dataset_from_directory(
@@ -145,36 +145,38 @@ def video_data_gen(img_height = 720, img_width = 1080):
             remainder = (idx_2 - idx_1) % vid_min_size
 
             # Collect data from a single video segment
-            X_sub = []
-            Y_sub = np.tile(label, (n_samples,1))
+            #X_sub = []
+            #Y_sub = np.tile(label, (n_samples,1))
 
             # Generate sub dataset
             for _ in range(n_samples):
                 sub_x = dataset_cur_genre.skip(skip_count).take(vid_min_size)
-                sub_x = np.array(list(tfds.as_numpy(sub_x)))
+                #sub_x = np.array(list(tfds.as_numpy(sub_x)))
+                #sub_x = np.array([list(tfds.as_numpy(sub_x))])
                 #print(sub_x.shape)
-                X_sub.append(sub_x)
-                '''
+                #X_sub.append(sub_x)
+                
                 if dataset == None:
                     dataset = tf.data.Dataset.from_tensor_slices((sub_x,label))
                 else:
                     sub_dataset = tf.data.Dataset.from_tensor_slices((sub_x,label))
                     dataset = dataset.concatenate(sub_dataset)
-                '''
+                
 
                 # Update skip_count
                 skip_count += vid_min_size
             
-            X_sub = np.array(X_sub)
-            assert X_sub.shape[0] == Y_sub.shape[0], "Data and label have wrong shapes"
+            #X_sub = np.array(X_sub)
+            #assert X_sub.shape[0] == Y_sub.shape[0], "Data and label have wrong shapes"
 
             # Add generated data into dataset
+            '''
             if dataset == None:
                 dataset = tf.data.Dataset.from_tensor_slices((X_sub,Y_sub))
             else:
                 sub_dataset = tf.data.Dataset.from_tensor_slices((X_sub,Y_sub))
                 dataset = dataset.concatenate(sub_dataset)
-
+            '''
             # Update skip_count
             skip_count += remainder
         break
