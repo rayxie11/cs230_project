@@ -25,6 +25,7 @@ def get_min_segment_val():
     # Set initial parameters
     vid_min_size = 10000
     genre_idx_dict = {}
+    sample_tot = 0
 
     for genre in genres:
         genre_idx_dict[genre] = [0]
@@ -43,6 +44,8 @@ def get_min_segment_val():
                 # Increase current video length
                 cur_vid_len += 1
             else:
+                sample_tot += 1
+
                 # Update minimum video length
                 vid_min_size = min(vid_min_size, cur_vid_len)
 
@@ -56,7 +59,7 @@ def get_min_segment_val():
         # Add the last index to idx_dict
         genre_idx_dict[genre].append(len(dir_names)-1)
     
-    return vid_min_size, genre_idx_dict
+    return vid_min_size, genre_idx_dict, sample_tot
 
 
 def build_feature_extractor(img_height = 256, img_width = 256):
@@ -230,9 +233,12 @@ if __name__ == '__main__':
     img_height = 720
     img_width = 1080
 
+    _,_,n = get_min_segment_val()
+    print(n)
+
     # Build feature extractor
-    feature_extractor = build_feature_extractor(img_height=img_height, img_width=img_width)
+    #feature_extractor = build_feature_extractor(img_height=img_height, img_width=img_width)
 
     # Generate dataset
     #video_data_gen_sub(feature_extractor, img_height=img_height, img_width=img_width)
-    video_data_gen_full(feature_extractor, img_height=img_height, img_width=img_width)
+    #video_data_gen_full(feature_extractor, img_height=img_height, img_width=img_width)

@@ -22,6 +22,7 @@ class rnn_model():
         _, x, y = X.shape
         _, n = Y.shape
         self.input = (x,y)
+        print(self.input)
         self.output = n
         self.dropout_rate = model_parameters["dropout_rate"]
         self.lstm_neurons = model_parameters["lstm_neurons"]
@@ -75,10 +76,13 @@ class rnn_model():
 if __name__ == '__main__':
     # Define dataset path
     dataset_path = "C:/Users/ray_s/Desktop/cs230_project/dataset/generated_dataset/image/"
+    #dataset_path = "C:/Users/ray_s/Desktop/cs230_project/dataset/generated_dataset/image_sub/"
 
     # Load data and labels
     X = np.load(dataset_path + "data.npy")
     Y = np.load(dataset_path + "label.npy")
+
+    print(X.shape)
     
     # Set model parameters
     lstm_neurons = 64
@@ -98,4 +102,4 @@ if __name__ == '__main__':
                         "batch_size":batch_size}
     
     # Run RNN model
-    model = rnn_model(X, Y, model_parameters)
+    #model = rnn_model(X, Y, model_parameters)
