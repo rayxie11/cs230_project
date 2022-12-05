@@ -15,7 +15,7 @@ subset_data = "/home/cs230/rgb_sub/"
 fullset_data = "/home/cs230/rgb/"
 save_path_sub = cur_folder + "/generated_dataset/image_sub"
 save_path_full = cur_folder + "/generated_dataset/image_full"
-genres = os.listdir(subset_data)
+genres = sorted(os.listdir(fullset_data))
 
 
 def get_min_segment_val():
@@ -209,6 +209,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
                 for m in range(i1,i2):
                     # Read image
                     img = cv2.imread(cur_path + "/" + dir_names[m])
+                    print(img.shape)
                     img = cv2.resize(img, (img_width,img_height))
 
                     # Extract image features
