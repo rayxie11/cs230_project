@@ -224,6 +224,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
                 X.append(X_single)
                 Y.append(label)
                 X_single = []
+                break
             break
 
     # Set dataset and label to np.arrays
