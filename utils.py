@@ -9,8 +9,12 @@ from tensorflow import keras
 
 
 # Get dataset path and genres list
-path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/dataset"
-genres = os.listdir(path + "/images")
+#path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/dataset"
+cur_folder = "/home/cs230"
+subset_data = "/home/cs230/rgb_sub/"
+fullset_data = "/home/cs230/rgb/"
+save_path = cur_folder + "/generated_dataset/image_sub"
+genres = os.listdir(subset_data)
 
 
 def get_min_segment_val():
@@ -29,7 +33,7 @@ def get_min_segment_val():
 
     for genre in genres:
         genre_idx_dict[genre] = [0]
-        cur_path = path + "/images/" + genre
+        cur_path =  fullset_data + genre
         dir_names = os.listdir(cur_path)
 
         # Loop through each video
@@ -112,11 +116,13 @@ def video_data_gen_sub(feature_extractor, img_height = 256, img_width = 256, fra
         X_single = []
 
         # Loop through all images within one genre
-        cur_path = path + "/images_sub/" + genres[i]
+        cur_path = subset_data + genres[i]
         dir_names = os.listdir(cur_path)
         for j in tqdm(range(len(dir_names)), position=0, desc="Curent genre: "+str(genres[i])):
             # Load single image
             img = cv2.imread(cur_path + "/" + dir_names[j])
+            if img is None:
+                continue
             img = cv2.resize(img, (img_width,img_height))
 
             # Extract image features
@@ -143,11 +149,13 @@ def video_data_gen_sub(feature_extractor, img_height = 256, img_width = 256, fra
     X = X[randomize]
     Y = Y[randomize]
 
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     # Store them into .npy files for extraction later
-    save_path = path + "/generated_dataset/image_sub"
-    np.save(save_path + '/data', X)
-    np.save(save_path + '/label', Y)   
-        
+    with open(save_path + '/data', 'wb') as f:
+        np.save(f, X)
+    with open(save_path + '/label', 'wb') as f:
+        np.save(f, Y)
 
 def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, frames = 30):
     '''
@@ -237,8 +245,8 @@ if __name__ == '__main__':
     print(n)
 
     # Build feature extractor
-    #feature_extractor = build_feature_extractor(img_height=img_height, img_width=img_width)
+    feature_extractor = build_feature_extractor(img_height=img_height, img_width=img_width)
 
     # Generate dataset
-    #video_data_gen_sub(feature_extractor, img_height=img_height, img_width=img_width)
+    video_data_gen_sub(feature_extractor, img_height=img_height, img_width=img_width)
     #video_data_gen_full(feature_extractor, img_height=img_height, img_width=img_width)
