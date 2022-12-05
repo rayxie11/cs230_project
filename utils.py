@@ -35,7 +35,7 @@ def get_min_segment_val():
     for genre in genres:
         genre_idx_dict[genre] = [0]
         cur_path =  fullset_data + genre
-        dir_names = os.listdir(cur_path)
+        dir_names = sorted(os.listdir(cur_path))
         print(dir_names)
 
         # Loop through each video
