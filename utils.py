@@ -187,7 +187,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
     # Construct dataset
     for i in range(len(genres)):
         # Set current path, file names, video splits and label
-        cur_path = fullset_data
+        cur_path = fullset_data+genres[i]
         dir_names = os.listdir(cur_path)
         genre_idx = genre_idx_dict[genres[i]]
         label = np.zeros(len(genres))
@@ -209,7 +209,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
                 for m in range(i1,i2):
                     # Read image
                     img = cv2.imread(cur_path + "/" + dir_names[m])
-                    print(img.shape)
+                    #print(img.shape)
                     img = cv2.resize(img, (img_width,img_height))
 
                     # Extract image features
