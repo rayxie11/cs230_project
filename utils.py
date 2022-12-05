@@ -36,7 +36,6 @@ def get_min_segment_val():
         genre_idx_dict[genre] = [0]
         cur_path =  fullset_data + genre
         dir_names = sorted(os.listdir(cur_path))
-        print(dir_names)
 
         # Loop through each video
         prev_header = dir_names[0].split('_')[0]
@@ -61,7 +60,6 @@ def get_min_segment_val():
                 # Reset count and prev_header
                 cur_vid_len = 1
                 prev_header = dir_names[i].split('_')[0]
-        break
         
         # Add the last index to idx_dict
         genre_idx_dict[genre].append(len(dir_names)-1)
@@ -180,7 +178,6 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
 
     #print(genre_idx_dict)
     #print(vid_min_size)
-    return
 
     # Check if given frame is larger than minimum video length
     if frames > vid_min_size:
@@ -238,7 +235,9 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
     Y = Y[randomize]
 
     # Store them into .npy files for extraction later
-    save_path = save_path_full
+    save_path = save_path_full+"/"+str(frames)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     np.save(save_path + '/data', X)
     np.save(save_path + '/label', Y)
 
