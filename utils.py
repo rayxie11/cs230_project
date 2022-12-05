@@ -176,6 +176,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
     # Get minimum video size and video slice indices
     vid_min_size, genre_idx_dict, _ = get_min_segment_val()
 
+    print(genre_idx_dict)
     print(vid_min_size)
 
     # Check if given frame is larger than minimum video length
