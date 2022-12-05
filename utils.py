@@ -13,7 +13,8 @@ from tensorflow import keras
 cur_folder = "/home/cs230"
 subset_data = "/home/cs230/rgb_sub/"
 fullset_data = "/home/cs230/rgb/"
-save_path = cur_folder + "/generated_dataset/image_sub"
+save_path_sub = cur_folder + "/generated_dataset/image_sub"
+save_path_full = cur_folder + "/generated_dataset/image_full"
 genres = os.listdir(subset_data)
 
 
@@ -149,12 +150,12 @@ def video_data_gen_sub(feature_extractor, img_height = 256, img_width = 256, fra
     X = X[randomize]
     Y = Y[randomize]
 
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
+    if not os.path.exists(save_path_sub):
+        os.makedirs(save_path_sub)
     # Store them into .npy files for extraction later
-    with open(save_path + '/data', 'wb') as f:
+    with open(save_path_sub + '/data', 'wb') as f:
         np.save(f, X)
-    with open(save_path + '/label', 'wb') as f:
+    with open(save_path_sub + '/label', 'wb') as f:
         np.save(f, Y)
 
 def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, frames = 30):
@@ -183,7 +184,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
     # Construct dataset
     for i in range(len(genres)):
         # Set current path, file names, video splits and label
-        cur_path = path + "/images/" + genres[i]
+        cur_path = fullset_data
         dir_names = os.listdir(cur_path)
         genre_idx = genre_idx_dict[genres[i]]
         label = np.zeros(len(genres))
@@ -231,7 +232,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
     Y = Y[randomize]
 
     # Store them into .npy files for extraction later
-    save_path = path + "/generated_dataset/image"
+    save_path = save_path_full
     np.save(save_path + '/data', X)
     np.save(save_path + '/label', Y)
 
@@ -248,5 +249,5 @@ if __name__ == '__main__':
     feature_extractor = build_feature_extractor(img_height=img_height, img_width=img_width)
 
     # Generate dataset
-    video_data_gen_sub(feature_extractor, img_height=img_height, img_width=img_width)
-    #video_data_gen_full(feature_extractor, img_height=img_height, img_width=img_width)
+    #video_data_gen_sub(feature_extractor, img_height=img_height, img_width=img_width)
+    video_data_gen_full(feature_extractor, img_height=img_height, img_width=img_width)
