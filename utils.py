@@ -193,7 +193,7 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
         label = np.zeros(len(genres))
         label[i] = 1
 
-        for j in tqdm(range(len(genre_idx)-1) ,position=0, desc="Current genre: "+str(genres[i])):
+        for j in tqdm(range(len(genre_idx)-1), position=0, desc="Current genre: "+str(genres[i])):
             # Get beginning and ending indices for a single video
             idx1 = genre_idx[j]
             idx2 = genre_idx[j+1] + 1
@@ -224,10 +224,13 @@ def video_data_gen_full(feature_extractor, img_height = 720, img_width = 1080, f
                 X.append(X_single)
                 Y.append(label)
                 X_single = []
+            break
 
     # Set dataset and label to np.arrays
     X = np.array(X)
     Y = np.array(Y)
+    print(X.shape)
+    print(Y.shape)
 
     # Shuffle them for training and validation purposes
     randomize = np.arange(len(X))
