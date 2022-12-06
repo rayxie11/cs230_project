@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 
 class rnn_model():
-    '''b
+    '''
     This class contains the RNN model
     '''
     def __init__(self, X, Y, model_parameters):

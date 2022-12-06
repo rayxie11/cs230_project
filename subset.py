@@ -5,55 +5,25 @@ import tarfile
 
 from collections import deque
 
+END_FRAME_INDEX = 20
+START_FRAME_INDEX = 1 
 
-MAX_FRAME = 20
-#deprecate
-MAX_VIDEO_COUNT = 2
-filePath = 'C:/Users/ray_s/Desktop/cs230_project/dataset/images'
-dirPath = 'C:/Users/ray_s/Desktop/cs230_project/dataset/images_subset'
+filePath = '/Users/xfeng/cs230/rgb.tar.gz'
+outPath = '/Users/xfeng/cs230/rgb_new'
 
-def files_from_tar_url(tar_path):
+def files_from_tar_url(tar_path, target_dir, start_frame_index, end_frame_index):
     labelMap = {}
     with tarfile.open(tar_path) as archive:
         for file in archive:
             if not file.isdir() and file.name.count('/') >=2:
-                print(file.name)
-                #rgb/tap/2TU7dE_9Vi4_341_0195.jpg
-                label = file.name[file.name.find('/') + 1 : file.name.rfind('/')]
-                print(label)
-                if label not in labelMap:
-                   labelMap[label] = {}
-
-                d = labelMap[label]
-
                 videoName = file.name[:file.name.rfind('_')]
                 index = int(file.name[file.name.rfind('_') + 1 : file.name.rfind('.')])
-                print(videoName, index)
-                if videoName not in d:
-                    d[videoName] = []
-                if index <= MAX_FRAME:
-                    d[videoName].append(file.name[file.name.rfind('/') + 1 :]) 
+                if index >= start_frame_index and index <= end_frame_index:
+                    print("extracting " + file.name)
+                    archive.extract(file, target_dir) 
 
-    retentionFiles = []
 
-    for labelVideos in labelMap.values():
-        for (x, files) in labelVideos.items():
-            files = sorted(files)
-            labelVideos[x] = files
-            for file in files:
-                retentionFiles.append(file)
-    return labelMap, retentionFiles
-
-labels,retentionFiles = files_from_tar_url(filePath)
-#print(labels)
-print(len(retentionFiles))
-print(retentionFiles)
-
-for root, dirs, files in os.walk(dirPath):
-    for name in files:
-        if name not in retentionFiles:
-            print("remove " + name)
-            os.remove(os.path.join(root, name))
+files_from_tar_url(filePath, outPath, START_FRAME_INDEX, END_FRAME_INDEX)
 
 #files = [f for f in files if f.endswith('.jpg')]
 #files[:10]
