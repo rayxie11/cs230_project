@@ -4,7 +4,7 @@ This file contains the RNN model for choreography classification
 import numpy as np
 from keras import layers, Model
 import matplotlib.pyplot as plt
-
+from tensorflow.keras.optimizers import Adam
 
 class rnn_model():
     '''
@@ -31,6 +31,8 @@ class rnn_model():
         self.split = model_parameters["split"]
         self.epochs = model_parameters["epoch"]
         self.batch_size = model_parameters["batch_size"]
+        self.fc_activation = model_parameters["fc_activation"]
+        self.learning_rate = model_parameters["learning_rate"]
 
         self.model()
         self.run_plot()
@@ -44,8 +46,8 @@ class rnn_model():
         X = layers.BatchNormalization()(input)
         X = layers.Bidirectional(layers.LSTM(self.lstm_neurons))(X)
         X = layers.Dropout(self.dropout_rate)(X)
-        X = layers.Dense(self.fc1_neuron, activation='relu')(X)
-        X = layers.Dense(self.fc2_neuron, activation='relu')(X)
+        X = layers.Dense(self.fc1_neuron, activation=self.fc_activation)(X)
+        X = layers.Dense(self.fc2_neuron, activation=self.fc_activation)(X)
         X = layers.Dense(self.output)(X)
         Y = layers.Activation('softmax')(X)
         self.model = Model(inputs=input, outputs=Y)
@@ -54,7 +56,7 @@ class rnn_model():
         '''
         Run model and plot accuracy and loss curves
         '''
-        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer=Adam(learning_rate=self.learning_rate), metrics=['accuracy'])
         history = self.model.fit(self.X, self.Y, validation_split=self.split, epochs=self.epochs, batch_size=self.batch_size)
         plt.plot(history.history['accuracy'])
         plt.plot(history.history['val_accuracy'])
@@ -75,8 +77,9 @@ class rnn_model():
 
 if __name__ == '__main__':
     # Define dataset path
-    dataset_path = "C:/Users/ray_s/Desktop/cs230_project/dataset/generated_dataset/image/"
+    #dataset_path = "C:/Users/ray_s/Desktop/cs230_project/dataset/generated_dataset/image/"
     #dataset_path = "C:/Users/ray_s/Desktop/cs230_project/dataset/generated_dataset/image_sub/"
+    dataset_path = "/Users/tkanell/Downloads/School/cs230/dataset/"
 
     # Load data and labels
     X = np.load(dataset_path + "data.npy")
@@ -85,13 +88,15 @@ if __name__ == '__main__':
     print(X.shape)
     
     # Set model parameters
-    lstm_neurons = 64
+    lstm_neurons = 480
     dropout_rate = 0.2
-    fc1_neurons = 32
-    fc2_neurons = 16
+    fc1_neurons = 320
+    fc2_neurons = 160
     train_valid_split = 0.1
     num_epochs = 20
     batch_size = 128
+    learning_rate = 0.0001
+    fc_activation = "relu"
 
     model_parameters = {"lstm_neurons":lstm_neurons,
                         "dropout_rate":dropout_rate,
@@ -99,7 +104,9 @@ if __name__ == '__main__':
                         "fc2_neurons":fc2_neurons,
                         "split":train_valid_split,
                         "epoch":num_epochs,
-                        "batch_size":batch_size}
+                        "batch_size":batch_size,
+                        "learning_rate":learning_rate,
+                        "fc_activation":fc_activation}
     
     # Run RNN model
-    #model = rnn_model(X, Y, model_parameters)
+    model = rnn_model(X, Y, model_parameters)
