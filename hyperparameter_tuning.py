@@ -27,7 +27,6 @@ class rnn_model():
         _, x, y = X.shape
         _, n = Y.shape
         self.input = (x,y)
-        print(self.input)
         self.output = n
         self.dropout_rate = model_parameters["dropout_rate"]
         self.lstm_neurons = model_parameters["lstm_neurons"]
