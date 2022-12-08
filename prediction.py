@@ -89,21 +89,21 @@ x = layers.ConvLSTM2D(
     activation="relu",
 )(x)
 output = layers.Conv3D(
-    filters=3,
+    filters=1,
     kernel_size=(3,3,3),
-    activation="softmax",
+    activation="sigmoid",
     padding="same"
 )(x)
 
 model = keras.models.Model(inp, output)
-model.compile(loss=keras.losses.categorical_crossentropy,
+model.compile(loss=keras.losses.binary_crossentropy,
               optimizer=keras.optimizers.Adam(),
              )
 
 early_stopping = keras.callbacks.EarlyStopping(monitor="val_loss", patience=10)
 reduce_lr = keras.callbacks.ReduceLROnPlateau(monitor="val_loss", patience=5)
 
-epochs=20
+epochs=10
 batch_size=5
 
 model.summary()
@@ -120,4 +120,4 @@ model.fit(
     verbose=True
 )
 
-model.save(cur_folder + 'v1_model')
+model.save(cur_folder + 'v1_greyscale_model')

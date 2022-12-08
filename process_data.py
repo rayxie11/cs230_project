@@ -51,7 +51,7 @@ def video_data_gen_sub(img_height = 256, img_width = 256, max_frame = 20):
         for k, (video, frames) in tqdm(enumerate(videoFramesMap.items()), position=0, desc="Current Genre: " + str(genres[i])):
             j = 0
             # Single datapoint storage list
-            singleVideo = np.zeros((len(frames), img_height, img_width, 3))
+            singleVideo = np.zeros((len(frames), img_height, img_width, 1))
 
             for frame in frames:
                 # print(frame)
@@ -62,6 +62,10 @@ def video_data_gen_sub(img_height = 256, img_width = 256, max_frame = 20):
                 # print("frame size before resize: " )
                 # print(frame.shape)
                 frame = cv2.resize(frame, (img_width, img_height))
+                # greyscale
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # add dimension
+                frame = np.expand_dims(frame, axis=-1)
                 # print("frame size after resize: " )
                 # print(frame.shape)
 
