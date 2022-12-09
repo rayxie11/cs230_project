@@ -13,6 +13,12 @@ This repository contains all the code CS230 Deep Learning Final Project which us
 
 `hyperparameter_tuning.py`: contains the neural network structure, plots the accuracy and loss, and tunes hyperparameters of the model
 
+`process_data.py`: dataset generation for prediction model
+
+`prediction.py`: prediction model
+
+`run_frame_prediction`: test prediction model
+
 `base_line.py` (not used anymore): contains neural network for classifying dance genres
 
 ## Installation
